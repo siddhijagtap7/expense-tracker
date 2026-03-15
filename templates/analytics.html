@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="header-container" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>Analytics</h2>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <select id="monthFilter" class="page-size-selector" onchange="loadAnalytics()" style="padding: 8px; border-radius: 4px;">
+            <option value="all">All Time</option>
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+        </select>
+        <a href="/" class="btn btn-secondary">Dashboard</a>
+    </div>
+</div>
+
+<div class="summary-banner">
+    <small id="spendingLabel">Total Spending</small>
+    <h1 id="totalSpending">₹0.00</h1>
+</div>
+
+<div class="analytics-grid">
+    <div class="chart-card">
+        <h3>Category Spending</h3>
+        <div class="chart-container"><canvas id="categoryChart"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+        <h3>Individual Expenses</h3>
+        <div class="chart-container"><canvas id="userChart"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+        <h3>Needed vs Unneeded</h3>
+        <div class="chart-container"><canvas id="typeChart"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+        <h3>Monthly Trend</h3>
+        <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set default selection to current month on load
+    const currentMonth = new Date().getMonth() + 1;
+    document.getElementById('monthFilter').value = currentMonth;
+
+    let charts = {}; // Store chart instances to destroy them before re-rendering
+
+    async function loadAnalytics() {
+        const month = document.getElementById("monthFilter").value;
+        const label = document.getElementById("spendingLabel");
+        
+        label.innerText = month === 'all' ? "Total Spending (All Time)" : `Total Spending (Month ${month})`;
+
+        try {
+            // Pass the selected month as a query parameter
+            const res = await fetch(`/analytics-data?month=${month}`);
+            const data = await res.json();
+
+            // Calculate Total
+            const total = Object.values(data.category).reduce((a, b) => a + b, 0);
+            document.getElementById("totalSpending").innerText = `₹${total.toLocaleString('en-IN')}`;
+
+            // Destroy old charts if they exist to prevent hover glitches
+            ['categoryChart', 'userChart', 'typeChart', 'monthlyChart'].forEach(id => {
+                if (charts[id]) charts[id].destroy();
+            });
+
+            // Create new charts and store instances
+            charts["categoryChart"] = createChart("categoryChart", data.category, "pie");
+            charts["userChart"] = createChart("userChart", data.family_contribution, "bar");
+            charts["typeChart"] = createChart("typeChart", data.needed_unneeded, "doughnut");
+            charts["monthlyChart"] = createChart("monthlyChart", data.monthly, "line");
+
+        } catch (error) {
+            console.error("Error loading analytics:", error);
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadAnalytics);
+</script>
+{% endblock %}

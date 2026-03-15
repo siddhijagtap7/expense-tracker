@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Expense</title>
+    <link rel="stylesheet" href="/static/css/expense.css">
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Add Expense</h2>
+
+    <form id="expenseForm">
+        <div class="form-group">
+            <label for="user">User</label>
+            <select id="user" required>
+                <option value="" disabled selected>Select User</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" required>
+                <option value="" disabled selected>Select Category</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="subcategory">Subcategory</label>
+            <select id="subcategory" required>
+                <option value="" disabled selected>Select Subcategory</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="amount">Amount</label>
+            <input type="number" id="amount" step="0.01" placeholder="0.00" required>
+        </div>
+
+        <div class="form-group">
+            <label for="payment_mode">Payment Mode</label>
+            <select id="payment_mode" required>
+                <option value="" disabled selected>Select Payment Mode</option>
+                <option value="upi">UPI</option>
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="cheque">Cheque</option>
+                <option value="netbanking">Netbanking</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="expense_type">Expense Type</label>
+            <select id="expense_type" required>
+                <option value="" disabled selected>Select Type</option>
+                <option value="necessary">Necessary</option>
+                <option value="unnecessary">Unnecessary</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="expense_scope">Scope</label>
+            <select id="expense_scope" required>
+                <option value="" disabled selected>Select Scope</option>
+                <option value="family">Family</option>
+                <option value="personal">Personal</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <input type="text" id="description" placeholder="What was this for?">
+        </div>
+
+        <div class="form-group">
+            <label for="expense_date">Date</label>
+            <input type="date" id="expense_date" max="" required>
+        </div>
+
+        <button type="submit">Add Expense</button>
+    </form>
+
+    <a href="/" class="back-link">&larr; Back to Dashboard</a>
+</div>
+
+<script>
+    // 1. Handle Date Restrictions (Today and Past only)
+    const dateInput = document.getElementById('expense_date');
+    const now = new Date();
+    
+    // Format date as YYYY-MM-DD for the 'max' attribute
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+
+    // Set default value and the max allowed date
+    dateInput.value = todayStr;
+    dateInput.setAttribute('max', todayStr);
+
+    let categoryMapping = {};
+
+    // 2. Load User and Category data from API
+    async function loadData() {
+        try {
+            const users = await fetch("/users").then(r => r.json());
+            categoryMapping = await fetch("/categories").then(r => r.json());
+
+            const userSelect = document.getElementById("user");
+            const categorySelect = document.getElementById("category");
+
+            // Populate Users
+            users.forEach(u => {
+                const option = document.createElement("option");
+                option.value = u.id;
+                option.text = u.name;
+                userSelect.appendChild(option);
+            });
+
+            // Populate Categories
+            Object.keys(categoryMapping).forEach(cat => {
+                const option = document.createElement("option");
+                option.value = cat;
+                option.text = cat;
+                categorySelect.appendChild(option);
+            });
+
+            // Listen for changes to update subcategories
+            categorySelect.addEventListener("change", updateSubcategories);
+
+        } catch (error) {
+            console.error("Error loading data:", error);
+        }
+    }
+
+    // 3. Update Subcategories based on Category selection
+    function updateSubcategories() {
+        const category = document.getElementById("category").value;
+        const subcategorySelect = document.getElementById("subcategory");
+
+        // Clear existing options but keep the placeholder
+        subcategorySelect.innerHTML = '<option value="" disabled selected>Select Subcategory</option>';
+
+        if (category && categoryMapping[category]) {
+            categoryMapping[category].forEach(sub => {
+                const option = document.createElement("option");
+                option.value = sub;
+                option.text = sub;
+                subcategorySelect.appendChild(option);
+            });
+        }
+    }
+
+    // Initialize data loading
+    loadData();
+
+    // 4. Form Submission Handling
+    document.getElementById("expenseForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const selectedDate = document.getElementById("expense_date").value;
+
+        // Validation: Prevent future dates
+        if (selectedDate > todayStr) {
+            alert("Future dates are not allowed. Please select today or a past date.");
+            return;
+        }
+
+        // Collect data
+        const data = {
+            user_id: parseInt(document.getElementById("user").value),
+            category: document.getElementById("category").value,
+            subcategory: document.getElementById("subcategory").value,
+            amount: parseFloat(document.getElementById("amount").value),
+            payment_mode: document.getElementById("payment_mode").value,
+            expense_type: document.getElementById("expense_type").value,
+            expense_scope: document.getElementById("expense_scope").value,
+            description: document.getElementById("description").value,
+            expense_date: selectedDate
+        };
+
+        // Final Validation check for empty dropdowns
+        if (!data.user_id || !data.category || !data.subcategory || !data.payment_mode) {
+            alert("Please select all required fields from the dropdowns.");
+            return;
+        }
+
+        try {
+            const response = await fetch("/expenses", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                window.location.href = "/";
+            } else {
+                const errorData = await response.json();
+                alert("Failed to save expense: " + (errorData.detail || "Unknown error"));
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("An error occurred while saving the expense.");
+        }
+    });
+</script>
+
+</body>
+</html>

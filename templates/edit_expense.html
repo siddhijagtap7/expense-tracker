@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Expense</title>
+    <link rel="stylesheet" href="/static/css/expense.css">
+</head>
+<body>
+
+<div class="container">
+    <h2>Edit Expense</h2>
+
+    <form id="editExpenseForm">
+        <div class="form-group">
+            <label for="user">User</label>
+            <select id="user" required></select>
+        </div>
+
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" required></select>
+        </div>
+
+        <div class="form-group">
+            <label for="subcategory">Subcategory</label>
+            <select id="subcategory" required></select>
+        </div>
+
+        <div class="form-group">
+            <label for="amount">Amount</label>
+            <input type="number" id="amount" step="0.01" value="{{ expense.amount }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="payment_mode">Payment Mode</label>
+            <select id="payment_mode" required>
+                <option value="upi">UPI</option>
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="netbanking">Netbanking</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="expense_type">Expense Type</label>
+            <select id="expense_type" required>
+                <option value="needed">Needed</option>
+                <option value="unneeded">Unneeded</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="expense_scope">Scope</label>
+            <select id="expense_scope" required>
+                <option value="family">Family</option>
+                <option value="personal">Personal</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <input type="text" id="description" value="{{ expense.description or '' }}">
+        </div>
+
+        <div class="form-group">
+            <label for="expense_date">Date</label>
+            <input type="date" id="expense_date" max="" required>
+        </div>
+
+        <button type="submit" class="btn">Update Expense</button>
+    </form>
+
+    <a href="/" class="back-link">&larr; Back to Dashboard</a>
+</div>
+
+<script>
+    let categoryMapping = {};
+
+    // 1. Get today's date in YYYY-MM-DD format for restriction
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+
+    // Set the max attribute on the date input
+    const dateInput = document.getElementById('expense_date');
+    dateInput.setAttribute('max', todayStr);
+
+    async function loadDataAndPreFill() {
+        try {
+            const users = await fetch("/users").then(r => r.json());
+            categoryMapping = await fetch("/categories").then(r => r.json());
+
+            const userSelect = document.getElementById("user");
+            const categorySelect = document.getElementById("category");
+
+            // Populate Users
+            users.forEach(u => {
+                const option = document.createElement("option");
+                option.value = u.id;
+                option.text = u.name;
+                if (u.id == "{{ expense.user_id }}") option.selected = true;
+                userSelect.appendChild(option);
+            });
+            document.getElementById("expense_date").value = "{{ expense.expense_date }}";
+            // Populate Categories
+            Object.keys(categoryMapping).forEach(cat => {
+                const option = document.createElement("option");
+                option.value = cat;
+                option.text = cat;
+                if (cat == "{{ expense.category }}") option.selected = true;
+                categorySelect.appendChild(option);
+            });
+
+            // Set static dropdowns
+            document.getElementById("payment_mode").value = "{{ expense.payment_mode }}";
+            document.getElementById("expense_type").value = "{{ expense.expense_type }}";
+            document.getElementById("expense_scope").value = "{{ expense.expense_scope }}";
+
+            // Initial Subcategory Load
+            updateSubcategories();
+            document.getElementById("subcategory").value = "{{ expense.subcategory }}";
+
+            categorySelect.addEventListener("change", updateSubcategories);
+
+        } catch (error) {
+            console.error("Error loading data:", error);
+        }
+    }
+
+    function updateSubcategories() {
+        const category = document.getElementById("category").value;
+        const subcategorySelect = document.getElementById("subcategory");
+        subcategorySelect.innerHTML = "";
+
+        if (categoryMapping[category]) {
+            categoryMapping[category].forEach(sub => {
+                const option = document.createElement("option");
+                option.value = sub;
+                option.text = sub;
+                subcategorySelect.appendChild(option);
+            });
+        }
+    }
+
+    // Initialize
+    loadDataAndPreFill();
+
+    // Submit Logic
+    document.getElementById("editExpenseForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const selectedDate = document.getElementById("expense_date").value;
+
+        // 2. Validation Check: Prevent future dates on update
+        if (selectedDate > todayStr) {
+            alert("Future dates are not allowed. Please select today or a past date.");
+            return;
+        }
+
+        const data = {
+            user_id: document.getElementById("user").value,
+            category: document.getElementById("category").value,
+            subcategory: document.getElementById("subcategory").value,
+            amount: document.getElementById("amount").value,
+            payment_mode: document.getElementById("payment_mode").value,
+            expense_type: document.getElementById("expense_type").value,
+            expense_scope: document.getElementById("expense_scope").value,
+            description: document.getElementById("description").value,
+            expense_date: selectedDate
+        };
+
+        const response = await fetch("/update-expense/{{ expense.id }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            window.location.href = "/";
+        } else {
+            alert("Failed to update.");
+        }
+    });
+</script>
+</body>
+</html>

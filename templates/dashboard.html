@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="header-container" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>Expenses</h2>
+    <div class="action-buttons" style="display: flex; gap: 10px;">
+        <a href="/add-expense" class="btn">Add Expense</a>
+        <a href="/analytics" class="btn btn-secondary">Analytics</a>
+    </div>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; flex-wrap: wrap; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+    
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <select id="dashboardMonthFilter" class="page-size-selector" style="height: 38px;">
+            <option value="all">All Time</option>
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+        </select>
+        <button onclick="applyMonthFilter()" class="btn btn-outline" style="height: 38px; padding: 0 15px;">Filter</button>
+        
+        <button onclick="downloadExcel()" class="btn" style="height: 38px; background-color: #204272; display: flex; align-items: center; gap: 8px; border: none;">
+            <i class="fa-solid fa-download"></i> 
+        </button>
+    </div>
+
+    <input type="text" id="tableSearch" placeholder="Search table..." 
+           onkeyup="filterTable()" 
+           style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; flex-grow: 1; max-width: 250px; height: 38px; box-sizing: border-box;">
+    
+    <div class="page-size-config">
+        <label for="pageSize" style="font-size: 0.9em; color: #666;">Show</label>
+        <select id="pageSize" class="page-size-selector" onchange="updatePageSize('expenseTableBody')" style="height: 38px;">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+        </select>
+    </div>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Date</th><th>User</th><th>Category</th><th>Subcategory</th><th>Amount</th>
+        </tr>
+    </thead>
+    <tbody id="expenseTableBody">
+        {% for e in expenses %}
+        <tr>
+            <td data-label="Date">{{ e.expense_date }}</td>
+            <td data-label="User">{{ e.user.name }}</td>
+            <td data-label="Category">{{ e.category }}</td> 
+            <td data-label="Subcategory">{{ e.subcategory }}</td>
+            <td data-label="Amount" class="amount">₹{{ "{:,.2f}".format(e.amount) }}</td>
+            <td data-label="Actions">
+            <a href="/edit-expense/{{ e.id }}" style="color: #3498db; text-decoration: none; font-size: 1.1em;">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </a>
+        </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="pagination-container" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+    <span id="pageDisplay" style="font-weight: bold; font-size: 0.9em; color: #666;">Page 1</span>
+    <div class="controls" style="display: flex; align-items: center; gap: 10px;">
+        <button id="prevBtn" class="btn btn-secondary" onclick="changePage(-1, 'expenseTableBody')">Prev</button>
+        <button id="nextBtn" class="btn btn-secondary" onclick="changePage(1, 'expenseTableBody')">Next</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 1. Initial Load
+    window.onload = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const month = urlParams.get('month') || 'all';
+        document.getElementById('dashboardMonthFilter').value = month;
+        paginateTable('expenseTableBody');
+    };
+
+    // 2. Filter Redirection
+    function applyMonthFilter() {
+        const month = document.getElementById('dashboardMonthFilter').value;
+        window.location.href = `/?month=${month}`;
+    }
+
+    // 3. Download Trigger
+    function downloadExcel() {
+        const month = document.getElementById('dashboardMonthFilter').value;
+        // Triggers the FastAPI endpoint we built earlier
+        window.location.href = `/download-expenses?month=${month}`;
+    }
+</script>
+{% endblock %}

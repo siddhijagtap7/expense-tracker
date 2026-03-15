@@ -1,0 +1,123 @@
+body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f7f6;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 15px; /* Reduced for smaller screens */
+        box-sizing: border-box;
+    }
+
+    /* Container styling */
+    .container {
+        background-color: #ffffff;
+        padding: 30px 40px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 450px; /* Slightly wider for better desktop look */
+        box-sizing: border-box;
+    }
+
+    h2 {
+        text-align: center;
+        color: #2c3e50;
+        margin-top: 0;
+        margin-bottom: 25px;
+    }
+
+    .form-group {
+        margin-bottom: 18px; /* Increased spacing for better touch targets */
+    }
+
+    label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+        font-size: 0.9em;
+        color: #555;
+    }
+
+    /* Input and Select styling */
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select {
+        width: 100%;
+        padding: 12px; /* Thicker inputs for mobile tapping */
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-family: inherit;
+        font-size: 16px; /* 16px prevents iOS auto-zoom on focus */
+        transition: border-color 0.3s;
+        background-color: #fff;
+    }
+
+    input:focus,
+    select:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+    }
+
+    /* Button styling */
+    button[type="submit"] {
+        width: 100%;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 14px;
+        font-size: 1em;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: background-color 0.3s;
+        -webkit-appearance: none; /* Fixes style issues on Safari mobile */
+    }
+
+    button[type="submit"]:hover {
+        background-color: #2980b9;
+    }
+
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 25px;
+        text-decoration: none;
+        color: #7f8c8d;
+        font-size: 0.95em;
+        transition: color 0.3s;
+    }
+
+    .back-link:hover {
+        color: #3498db;
+    }
+
+    /* --- MOBILE RESPONSIVE OVERRIDES --- */
+    @media screen and (max-width: 480px) {
+        body {
+            justify-content: flex-start; /* Better for scrolling on tall forms */
+            padding-top: 30px;
+        }
+
+        .container {
+            padding: 20px 25px;
+            border-radius: 12px; /* Softer look on mobile */
+            box-shadow: none; /* Clean flat look for small screens */
+            border: 1px solid #eee;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+        }
+        
+        button[type="submit"] {
+            padding: 16px; /* Larger hit area for thumbs */
+        }
+    }
