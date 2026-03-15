@@ -87,7 +87,24 @@ def analytics_page(request: Request):
         "analytics.html",
         {"request": request}
     )
-    
+  
+@app.delete("/delete-expense/{expense_id}")
+async def delete_expense(expense_id: int):
+    db = SessionLocal()
+    try:
+        expense = db.query(Expense).filter(Expense.id == expense_id).first()
+        if not expense:
+            return {"status": "error", "message": "Expense not found"}, 404
+        
+        db.delete(expense)
+        db.commit()
+        return {"status": "success", "message": "Expense deleted"}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}, 500
+    finally:
+        db.close()
+  
 @app.get("/categories")
 def get_categories():
     sorted_mapping = {
