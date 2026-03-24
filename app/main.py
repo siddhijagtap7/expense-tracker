@@ -151,7 +151,7 @@ def download_expenses(month: str = "all"):
         
         output.seek(0)
 
-        filename = f"expenses_{month}.xlsx"
+        filename = f"expenses_{month}_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
         headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
         
         return StreamingResponse(
