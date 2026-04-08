@@ -36,65 +36,79 @@
 <div class="analytics-grid">
     <div class="chart-card">
         <h3>Category Spending</h3>
-        <div class="chart-container"><canvas id="categoryChart"></canvas></div>
+        <div class="chart-container">
+            <canvas id="categoryChart"></canvas>
+        </div>
     </div>
 
     <div class="chart-card">
-        <h3>Individual Expenses</h3>
-        <div class="chart-container"><canvas id="userChart"></canvas></div>
+        <h3>Expenses Paid by</h3>
+        <div class="chart-container">
+            <canvas id="paidByChart"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <h3>Expenses Paid for</h3>
+        <div class="chart-container">
+            <canvas id="paidForChart"></canvas>
+        </div>
     </div>
 
     <div class="chart-card">
         <h3>Needed vs Unneeded</h3>
-        <div class="chart-container"><canvas id="typeChart"></canvas></div>
+        <div class="chart-container">
+            <canvas id="typeChart"></canvas>
+        </div>
     </div>
 
     <div class="chart-card">
         <h3>Monthly Trend</h3>
-        <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
+        <div class="chart-container">
+            <canvas id="monthlyChart"></canvas>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Set default selection to current month on load
-    const currentMonth = new Date().getMonth() + 1;
-    document.getElementById('monthFilter').value = currentMonth;
+const currentMonth = new Date().getMonth() + 1;
+document.getElementById('monthFilter').value = currentMonth;
 
-    let charts = {}; // Store chart instances to destroy them before re-rendering
+let charts = {};
 
-    async function loadAnalytics() {
-        const month = document.getElementById("monthFilter").value;
-        const label = document.getElementById("spendingLabel");
-        
-        label.innerText = month === 'all' ? "Total Spending (All Time)" : `Total Spending (Month ${month})`;
+async function loadAnalytics() {
+    const month = document.getElementById("monthFilter").value;
+    const label = document.getElementById("spendingLabel");
 
-        try {
-            // Pass the selected month as a query parameter
-            const res = await fetch(`/analytics-data?month=${month}`);
-            const data = await res.json();
+    label.innerText = month === 'all'
+        ? "Total Spending (All Time)"
+        : `Total Spending (Month ${month})`;
 
-            // Calculate Total
-            const total = Object.values(data.category).reduce((a, b) => a + b, 0);
-            document.getElementById("totalSpending").innerText = `₹${total.toLocaleString('en-IN')}`;
+    try {
+        const res = await fetch(`/analytics-data?month=${month}`);
+        const data = await res.json();
 
-            // Destroy old charts if they exist to prevent hover glitches
-            ['categoryChart', 'userChart', 'typeChart', 'monthlyChart'].forEach(id => {
+        const total = Object.values(data.category).reduce((a, b) => a + b, 0);
+        document.getElementById("totalSpending").innerText = `₹${total.toLocaleString('en-IN')}`;
+
+        ['categoryChart', 'paidByChart', 'paidForChart', 'typeChart', 'monthlyChart']
+            .forEach(id => {
                 if (charts[id]) charts[id].destroy();
             });
 
-            // Create new charts and store instances
-            charts["categoryChart"] = createChart("categoryChart", data.category, "pie");
-            charts["userChart"] = createChart("userChart", data.family_contribution, "bar");
-            charts["typeChart"] = createChart("typeChart", data.needed_unneeded, "doughnut");
-            charts["monthlyChart"] = createChart("monthlyChart", data.monthly, "line");
+        charts["categoryChart"] = createChart("categoryChart", data.category, "pie");
+        charts["paidByChart"] = createChart("paidByChart", data.family_contribution, "bar");
+        charts["paidForChart"] = createChart("paidForChart", data.paid_for, "bar");
+        charts["typeChart"] = createChart("typeChart", data.needed_unneeded, "doughnut");
+        charts["monthlyChart"] = createChart("monthlyChart", data.monthly, "line");
 
-        } catch (error) {
-            console.error("Error loading analytics:", error);
-        }
+    } catch (error) {
+        console.error("Error loading analytics:", error);
     }
+}
 
-    window.addEventListener('DOMContentLoaded', loadAnalytics);
+window.addEventListener('DOMContentLoaded', loadAnalytics);
 </script>
 {% endblock %}

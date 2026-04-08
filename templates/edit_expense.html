@@ -108,7 +108,6 @@
             const categorySelect = document.getElementById("category");
 
             users.forEach(u => {
-                // ✅ Expense FOR WHOM → include ALL users
                 const optExpenser = document.createElement("option");
                 optExpenser.value = u.id;
                 optExpenser.text = u.name;
@@ -119,7 +118,6 @@
 
                 expenserSelect.appendChild(optExpenser);
 
-                // ✅ Paid BY → EXCLUDE family users
                 if (u.username !== "family") {
                     const optPayee = document.createElement("option");
                     optPayee.value = u.id;
@@ -133,10 +131,9 @@
                 }
             });
 
-            // ✅ Date
             document.getElementById("expense_date").value = "{{ expense.expense_date }}";
 
-            // ✅ Categories
+            // Categories
             Object.keys(categoryMapping).forEach(cat => {
                 const option = document.createElement("option");
                 option.value = cat;
@@ -145,12 +142,12 @@
                 categorySelect.appendChild(option);
             });
 
-            // ✅ Static fields
+            // Static fields
             document.getElementById("payment_mode").value = "{{ expense.payment_mode }}";
             document.getElementById("expense_type").value = "{{ expense.expense_type }}";
             document.getElementById("expense_scope").value = "{{ expense.expense_scope }}";
 
-            // ✅ Load subcategories
+            //  Load subcategories
             updateSubcategories();
             document.getElementById("subcategory").value = "{{ expense.subcategory }}";
 

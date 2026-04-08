@@ -11,6 +11,7 @@ from .database import engine, SessionLocal
 from .models import Base, Expense, User
 from .analytics import (
     category_spending,
+    paid_for_spending,
     user_family_spending,
     needed_vs_unneeded,
     monthly_spending
@@ -31,8 +32,6 @@ def home(request: Request, month: str = "all"):
         query = db.query(Expense)
         
         if month != "all":
-            # Formats month as '01', '02', etc. 
-            # We zfill(2) the input month to match this format
             target_month = month.zfill(2)
             query = query.filter(func.strftime('%m', Expense.expense_date) == target_month)
         
@@ -72,10 +71,11 @@ def analytics_data(month: str = "all"):
         m = int(month) if month != "all" else None
 
         return {
-            "category": category_spending(db, m),
-            "family_contribution": user_family_spending(db, m),
-            "needed_unneeded": needed_vs_unneeded(db, m),
-            "monthly": monthly_spending(db)
+            "category": category_spending(db, month),
+            "family_contribution": user_family_spending(db, month),
+            "paid_for": paid_for_spending(db, month),  # ADD THIS
+            "needed_unneeded": needed_vs_unneeded(db, month),
+            "monthly": monthly_spending(db),
         }
     finally:
         db.close()
@@ -185,8 +185,6 @@ async def update_expense(expense_id: int, request: Request):
     try:
         expense = db.query(Expense).filter(Expense.id == expense_id).first()
         if expense:
-            # --- CONVERSION LOGIC ---
-            # Convert date string 'YYYY-MM-DD' to a Python date object
             date_obj = datetime.strptime(data['expense_date'], '%Y-%m-%d').date()
             expense.user_id_paid_by = int(data['user_id_paid_by'])
             expense.user_id_expense_for_whom = int(data['user_id_expense_for_whom'])

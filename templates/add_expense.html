@@ -121,13 +121,11 @@
 
             // Populate Users
             users.forEach(u => {
-                // ✅ Expense FOR WHOM → include ALL users
                 const optExpenser = document.createElement("option");
                 optExpenser.value = u.id;
                 optExpenser.text = u.name;
                 expenserSelect.appendChild(optExpenser);
 
-                // ✅ Paid BY → exclude family
                 if (u.username !== "family") {
                     const optPayee = document.createElement("option");
                     optPayee.value = u.id;

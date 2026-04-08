@@ -15,6 +15,17 @@ def category_spending(db, month=None):
         final[category] = db_data.get(category, 0)
     return final
 
+def paid_for_spending(db, month=None):
+    query = (
+        db.query(User.name, func.sum(Expense.amount))
+        .join(Expense, Expense.user_id_expense_for_whom == User.id)
+    )
+
+    if month:
+        query = query.filter(extract('month', Expense.expense_date) == month)
+
+    results = query.group_by(User.name).all()
+    return {r[0]: float(r[1]) for r in results}
 
 def user_family_spending(db, month=None):
     query = (
