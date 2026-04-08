@@ -14,7 +14,8 @@ class Expense(Base):
 
     __tablename__ = "expenses"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id_paid_by = Column(Integer, ForeignKey("users.id"))
+    user_id_expense_for_whom = Column(Integer, ForeignKey("users.id"))
     subcategory = Column(String)
     amount = Column(Float)
     payment_mode = Column(String)
@@ -22,5 +23,6 @@ class Expense(Base):
     expense_scope = Column(String)
     description = Column(String)
     expense_date = Column(Date)
-    user = relationship("User")
+    user = relationship("User", foreign_keys=[user_id_paid_by])
+    expense_for_user = relationship("User", foreign_keys=[user_id_expense_for_whom])
     category = Column(String)

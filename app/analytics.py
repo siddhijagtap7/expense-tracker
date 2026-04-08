@@ -19,7 +19,7 @@ def category_spending(db, month=None):
 def user_family_spending(db, month=None):
     query = (
         db.query(User.name, func.sum(Expense.amount))
-        .join(Expense, Expense.user_id == User.id)
+        .join(Expense, Expense.user_id_paid_by == User.id)
     )
     if month:
         query = query.filter(extract('month', Expense.expense_date) == month)

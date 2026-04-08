@@ -12,9 +12,18 @@
     <h2>Edit Expense</h2>
 
     <form id="editExpenseForm">
+       <div class="form-group">
+            <label for="user_payee">Paid by</label>
+            <select id="user_payee" required>
+                <option value="" disabled selected>Select User</option>
+            </select>
+        </div>
+
         <div class="form-group">
-            <label for="user">User</label>
-            <select id="user" required></select>
+            <label for="user_expenser">Expense for whom</label>
+            <select id="user_expenser" required>
+                <option value="" disabled selected>Select User</option>
+            </select>
         </div>
 
         <div class="form-group">
@@ -94,19 +103,40 @@
             const users = await fetch("/users").then(r => r.json());
             categoryMapping = await fetch("/categories").then(r => r.json());
 
-            const userSelect = document.getElementById("user");
+            const payeeSelect = document.getElementById("user_payee");
+            const expenserSelect = document.getElementById("user_expenser");
             const categorySelect = document.getElementById("category");
 
-            // Populate Users
             users.forEach(u => {
-                const option = document.createElement("option");
-                option.value = u.id;
-                option.text = u.name;
-                if (u.id == "{{ expense.user_id }}") option.selected = true;
-                userSelect.appendChild(option);
+                // ✅ Expense FOR WHOM → include ALL users
+                const optExpenser = document.createElement("option");
+                optExpenser.value = u.id;
+                optExpenser.text = u.name;
+
+                if (u.id == "{{ expense.user_id_expense_for_whom }}") {
+                    optExpenser.selected = true;
+                }
+
+                expenserSelect.appendChild(optExpenser);
+
+                // ✅ Paid BY → EXCLUDE family users
+                if (u.username !== "family") {
+                    const optPayee = document.createElement("option");
+                    optPayee.value = u.id;
+                    optPayee.text = u.name;
+
+                    if (u.id == "{{ expense.user_id_paid_by }}") {
+                        optPayee.selected = true;
+                    }
+
+                    payeeSelect.appendChild(optPayee);
+                }
             });
+
+            // ✅ Date
             document.getElementById("expense_date").value = "{{ expense.expense_date }}";
-            // Populate Categories
+
+            // ✅ Categories
             Object.keys(categoryMapping).forEach(cat => {
                 const option = document.createElement("option");
                 option.value = cat;
@@ -115,12 +145,12 @@
                 categorySelect.appendChild(option);
             });
 
-            // Set static dropdowns
+            // ✅ Static fields
             document.getElementById("payment_mode").value = "{{ expense.payment_mode }}";
             document.getElementById("expense_type").value = "{{ expense.expense_type }}";
             document.getElementById("expense_scope").value = "{{ expense.expense_scope }}";
 
-            // Initial Subcategory Load
+            // ✅ Load subcategories
             updateSubcategories();
             document.getElementById("subcategory").value = "{{ expense.subcategory }}";
 
@@ -162,10 +192,11 @@
         }
 
         const data = {
-            user_id: document.getElementById("user").value,
+            user_id_paid_by: parseInt(document.getElementById("user_payee").value),
+            user_id_expense_for_whom: parseInt(document.getElementById("user_expenser").value),
             category: document.getElementById("category").value,
             subcategory: document.getElementById("subcategory").value,
-            amount: document.getElementById("amount").value,
+            amount: parseFloat(document.getElementById("amount").value),
             payment_mode: document.getElementById("payment_mode").value,
             expense_type: document.getElementById("expense_type").value,
             expense_scope: document.getElementById("expense_scope").value,

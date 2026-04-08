@@ -4,7 +4,8 @@ from .enums import ExpenseScope, ExpenseType, PaymentMode
 
 
 class ExpenseCreate(BaseModel):
-    user_id: int
+    user_id_paid_by: int
+    user_id_expense_for_whom:int
     category: str
     subcategory: str
     amount: float
@@ -17,7 +18,8 @@ class ExpenseCreate(BaseModel):
 
 class ExpenseResponse(BaseModel):
     id: int
-    user_id: int
+    user_id_paid_by: int
+    user_id_expense_for_whom:int
     category: str
     subcategory: str
     amount: float

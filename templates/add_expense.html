@@ -14,8 +14,15 @@
 
     <form id="expenseForm">
         <div class="form-group">
-            <label for="user">User</label>
-            <select id="user" required>
+            <label for="user_payee">Paid by</label>
+            <select id="user_payee" required>
+                <option value="" disabled selected>Select User</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="user_expenser">Expense for whom</label>
+            <select id="user_expenser" required>
                 <option value="" disabled selected>Select User</option>
             </select>
         </div>
@@ -108,15 +115,25 @@
             const users = await fetch("/users").then(r => r.json());
             categoryMapping = await fetch("/categories").then(r => r.json());
 
-            const userSelect = document.getElementById("user");
+            const payeeSelect = document.getElementById("user_payee");
+            const expenserSelect = document.getElementById("user_expenser");
             const categorySelect = document.getElementById("category");
 
             // Populate Users
             users.forEach(u => {
-                const option = document.createElement("option");
-                option.value = u.id;
-                option.text = u.name;
-                userSelect.appendChild(option);
+                // ✅ Expense FOR WHOM → include ALL users
+                const optExpenser = document.createElement("option");
+                optExpenser.value = u.id;
+                optExpenser.text = u.name;
+                expenserSelect.appendChild(optExpenser);
+
+                // ✅ Paid BY → exclude family
+                if (u.username !== "family") {
+                    const optPayee = document.createElement("option");
+                    optPayee.value = u.id;
+                    optPayee.text = u.name;
+                    payeeSelect.appendChild(optPayee);
+                }
             });
 
             // Populate Categories
@@ -170,7 +187,8 @@
 
         // Collect data
         const data = {
-            user_id: parseInt(document.getElementById("user").value),
+            user_id_paid_by: parseInt(document.getElementById("user_payee").value),
+            user_id_expense_for_whom: parseInt(document.getElementById("user_expenser").value),
             category: document.getElementById("category").value,
             subcategory: document.getElementById("subcategory").value,
             amount: parseFloat(document.getElementById("amount").value),
@@ -182,8 +200,14 @@
         };
 
         // Final Validation check for empty dropdowns
-        if (!data.user_id || !data.category || !data.subcategory || !data.payment_mode) {
-            alert("Please select all required fields from the dropdowns.");
+        if (
+            !data.user_id_paid_by ||
+            !data.user_id_expense_for_whom ||
+            !data.category ||
+            !data.subcategory ||
+            !data.payment_mode
+        ) {
+            alert("Please select all required fields.");
             return;
         }
 

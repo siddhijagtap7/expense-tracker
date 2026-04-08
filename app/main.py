@@ -132,7 +132,8 @@ def download_expenses(month: str = "all"):
         for e in expenses:
             data.append({
                 "Date": e.expense_date,
-                "User": e.user.name,
+                "Paid by": e.user.name if e.user else "",
+                "Expense for whom": e.expense_for_user.name if e.expense_for_user else "",
                 "Category": e.category,
                 "Subcategory": e.subcategory,
                 "Payment Mode": e.payment_mode,
@@ -187,8 +188,8 @@ async def update_expense(expense_id: int, request: Request):
             # --- CONVERSION LOGIC ---
             # Convert date string 'YYYY-MM-DD' to a Python date object
             date_obj = datetime.strptime(data['expense_date'], '%Y-%m-%d').date()
-            
-            expense.user_id = int(data['user_id'])
+            expense.user_id_paid_by = int(data['user_id_paid_by'])
+            expense.user_id_expense_for_whom = int(data['user_id_expense_for_whom'])
             expense.category = data['category']
             expense.subcategory = data['subcategory']
             expense.amount = float(data['amount'])
