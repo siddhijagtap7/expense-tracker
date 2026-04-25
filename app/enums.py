@@ -16,3 +16,4 @@ class PaymentMode(str, Enum):
     CASH = "cash"
     CARD = "card"
     NETBANKING = "netbanking"
+    CHEQUE = "cheque"

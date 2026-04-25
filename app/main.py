@@ -71,10 +71,10 @@ def analytics_data(month: str = "all"):
         m = int(month) if month != "all" else None
 
         return {
-            "category": category_spending(db, month),
-            "family_contribution": user_family_spending(db, month),
-            "paid_for": paid_for_spending(db, month),  # ADD THIS
-            "needed_unneeded": needed_vs_unneeded(db, month),
+            "category": category_spending(db, m),
+            "family_contribution": user_family_spending(db, m),
+            "paid_for": paid_for_spending(db, m),
+            "needed_unneeded": needed_vs_unneeded(db, m),
             "monthly": monthly_spending(db),
         }
     finally:
