@@ -87,5 +87,9 @@ CATEGORY_MAPPING = {
 
     "Other": [
         "Misc"
+    ],
+
+    "Pocket Money Parth": [
+        "Pocket Money Parth"
     ]
 }
